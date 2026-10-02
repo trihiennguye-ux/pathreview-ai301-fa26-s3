@@ -7,6 +7,7 @@ from api.middleware.auth import get_current_user
 from api.schemas.review import ReviewCreate, ReviewListResponse, ReviewResponse
 from core.database import get_db
 from core.models.user import User
+from core.services.profile_service import get_profile
 from core.services.review_service import (
     create_review,
     get_review,
@@ -32,6 +33,20 @@ async def create_review_endpoint(
     Returns review with status="pending" immediately.
     """
     try:
+        # Reject a profile that has nothing to ingest
+        profile = await get_profile(db=db, profile_id=data.profile_id, user_id=current_user.id)
+        if profile and not (
+            profile.github_username or profile.portfolio_url or profile.resume_text
+        ):
+            log.warning("review_rejected_no_content", profile_id=str(data.profile_id))
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Profile has no content to review. "
+                    "Add a GitHub username, portfolio URL, or resume first."
+                ),
+            )
+
         # Create review with status="pending"
         review = await create_review(
             db=db,
