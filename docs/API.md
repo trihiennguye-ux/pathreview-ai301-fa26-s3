@@ -21,7 +21,7 @@ Base URL: `http://localhost:8000`
 
 ### Reviews
 
-`POST /reviews` — Request a new portfolio review for a profile.
+`POST /reviews` — Request a new portfolio review for a profile. Returns `422` if the profile has no GitHub username, portfolio URL, or resume.
 `GET /reviews/{review_id}` — Retrieve a completed review.
 `GET /reviews` — List reviews for the authenticated user (paginated).
 
